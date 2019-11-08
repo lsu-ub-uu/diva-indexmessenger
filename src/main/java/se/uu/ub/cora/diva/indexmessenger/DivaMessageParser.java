@@ -30,7 +30,7 @@ public class DivaMessageParser implements MessageParser {
 	private static final String TEXT_TO_IDENTIFY_MESSAGES_WHICH_DOES_TRIGGER_INDEXING = "<category term=\"MODEL\" scheme=\"fedora-types:dsID\" label=\"xsd:string\">";
 	private Logger logger = LoggerProvider.getLoggerForClass(DivaMessageParser.class);
 	private String parsedRecordId;
-	private String parsedRecordType;
+	// private String parsedRecordType;
 	private boolean workOrderShouldBeCreated = true;
 
 	@Override
