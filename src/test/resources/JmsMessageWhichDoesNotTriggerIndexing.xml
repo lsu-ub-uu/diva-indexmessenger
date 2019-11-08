@@ -1,0 +1,24 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:fedora-types="http://www.fedora.info/definitions/1/0/types/">
+  <id>urn:uuid:d7425e56-1f19-4ba8-9854-763465c9a1ec</id>
+  <updated>2019-10-08T12:36:46.514Z</updated>
+  <author>
+    <name>fedoraAdmin</name>
+    <uri>http://localhost:8088/fedora</uri>
+  </author>
+  <title type="text">modifyDatastreamByValue</title>
+  <category term="diva2:666498" scheme="fedora-types:pid" label="xsd:string"></category>
+  <category term="MODEL_NOREF" scheme="fedora-types:dsID" label="xsd:string"></category>
+  <category term="null" scheme="fedora-types:altIDs" label="fedora-types:ArrayOfString"></category>
+  <category term="null" scheme="fedora-types:dsLabel" label="xsd:string"></category>
+  <category term="null" scheme="fedora-types:formatURI" label="xsd:string"></category>
+  <category term="[OMITTED]" scheme="fedora-types:dsContent" label="xsd:base64Binary"></category>
+  <category term="SHA-512" scheme="fedora-types:checksumType" label="xsd:string"></category>
+  <category term="null" scheme="fedora-types:checksum" label="xsd:string"></category>
+  <category term="MODEL_NOREF updated by DREAM" scheme="fedora-types:logMessage" label="xsd:string"></category>
+  <category term="false" scheme="fedora-types:force" label="xsd:boolean"></category>
+  <summary type="text">diva2:666498</summary>
+  <content type="text">2019-10-08T12:36:46.514Z</content>
+  <category term="32.1" scheme="info:fedora/fedora-system:def/view#version"></category>
+  <category term="info:fedora/fedora-system:ATOM-APIM-1.0" scheme="http://www.fedora.info/definitions/1/0/types/formatURI"></category>
+</entry>
