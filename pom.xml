@@ -66,7 +66,7 @@
 			<groupId>se.uu.ub.cora</groupId>
 			<artifactId>activemq</artifactId>
 			<version>${activemq.version}</version>
-			<scope>compile</scope>
+			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
 	<build>
