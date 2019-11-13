@@ -77,14 +77,13 @@ public class DivaIndexMessengerStarter {
 		JmsMessageRoutingInfo routingInfo = createMessageRoutingInfoFromProperties(properties);
 		CoraCredentials credentials = createCoraCredentialsFromProperties(properties);
 
-		indexMessengerListener = new IndexMessengerListener(coraClientFactory, messageParserFactory,
-				routingInfo, credentials);
-
-		// TODO: The code below will ever be run.
-		String logM = "Listening for index messages from: {0} using port: {1}";
+		String logM = "Will listen for index messages from: {0} using port: {1}";
 		String formattedLogMessage = MessageFormat.format(logM, routingInfo.hostname,
 				routingInfo.port);
 		logger.logInfoUsingMessage(formattedLogMessage);
+
+		indexMessengerListener = new IndexMessengerListener(coraClientFactory, messageParserFactory,
+				routingInfo, credentials);
 
 	}
 

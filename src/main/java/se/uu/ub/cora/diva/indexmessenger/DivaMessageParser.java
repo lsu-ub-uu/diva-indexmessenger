@@ -27,11 +27,11 @@ import se.uu.ub.cora.logger.Logger;
 import se.uu.ub.cora.logger.LoggerProvider;
 
 public class DivaMessageParser implements MessageParser {
-	private static final String TEXT_TO_IDENTIFY_MESSAGES_WHICH_DOES_TRIGGER_INDEXING = "<category term=\"MODEL\" scheme=\"fedora-types:dsID\" label=\"xsd:string\">";
+	private static final String TEXT_TO_IDENTIFY_MESSAGES_WHICH_DOES_TRIGGER_INDEXING = ""
+			+ "<category term=\"MODEL_NOREF\" scheme=\"fedora-types:dsID\" label=\"xsd:string\"></category>";
 	private Logger logger = LoggerProvider.getLoggerForClass(DivaMessageParser.class);
 	private String parsedRecordId;
-	// private String parsedRecordType;
-	private boolean workOrderShouldBeCreated = true;
+	private boolean workOrderShouldBeCreated = false;
 
 	@Override
 	public void parseHeadersAndMessage(Map<String, String> headers, String message) {
@@ -43,18 +43,13 @@ public class DivaMessageParser implements MessageParser {
 	}
 
 	private void tryToParseMessage(Map<String, String> headers, String message) {
-		boolean iSconsolidatedMessageFromClassic = consolidatedMessageFromClassic(message);
-		if (iSconsolidatedMessageFromClassic) {
+		if (shouldWorkOrderBeCreatedForMessage(message)) {
 			extractRecordIdFromHeaders(headers);
-			// extractRecordTypeIdFromMessage(message);
-
-		} else {
-			preventWorkOrderFromBeeingCreated();
+			workOrderShouldBeCreated = true;
 		}
 	}
 
-	// TODO: To be reviewed.
-	private boolean consolidatedMessageFromClassic(String message) {
+	private boolean shouldWorkOrderBeCreatedForMessage(String message) {
 		return message.contains(TEXT_TO_IDENTIFY_MESSAGES_WHICH_DOES_TRIGGER_INDEXING);
 	}
 
@@ -66,11 +61,6 @@ public class DivaMessageParser implements MessageParser {
 
 	private void handleError(IndexMessageException e) {
 		logger.logErrorUsingMessage(e.getMessage());
-		preventWorkOrderFromBeeingCreated();
-	}
-
-	private void preventWorkOrderFromBeeingCreated() {
-		workOrderShouldBeCreated = false;
 	}
 
 	@Override
@@ -80,7 +70,10 @@ public class DivaMessageParser implements MessageParser {
 
 	@Override
 	public String getParsedType() {
-		return null;
+		// return top level diva type for all publication types when it is decided what it should be
+		// called
+
+		return "currentlyUnknownParent";
 	}
 
 	@Override

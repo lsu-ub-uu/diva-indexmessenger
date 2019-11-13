@@ -96,7 +96,7 @@ public class DivaMessageParserTest {
 	@Test
 	public void testMessageParserReturnsTypeId() throws Exception {
 		messageParser.parseHeadersAndMessage(headers, message);
-		assertEquals(messageParser.getParsedType(), null);
+		assertEquals(messageParser.getParsedType(), "currentlyUnknownParent");
 	}
 
 	@Test

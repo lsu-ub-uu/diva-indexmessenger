@@ -75,7 +75,7 @@ public class DivaIndexMessengerStarterTest {
 		assertEquals(loggerFactorySpy.getInfoLogMessageUsingClassNameAndNo(testedClassName, 1),
 				"Sending indexOrders to: someBaseUrl using appToken from: someAppTokenVerifierUrl");
 		assertEquals(loggerFactorySpy.getInfoLogMessageUsingClassNameAndNo(testedClassName, 2),
-				"Listening for index messages from: dev-diva-drafts using port: 61617");
+				"Will listen for index messages from: dev-diva-drafts using port: 61617");
 		assertEquals(loggerFactorySpy.getInfoLogMessageUsingClassNameAndNo(testedClassName, 3),
 				"DivaIndexMessengerStarter started");
 		assertEquals(loggerFactorySpy.getNoOfInfoLogMessagesUsingClassname(testedClassName), 4);
@@ -131,7 +131,7 @@ public class DivaIndexMessengerStarterTest {
 		assertNotNull(messagingRoutingInfo);
 		assertEquals(messagingRoutingInfo.hostname, "dev-diva-drafts");
 		assertEquals(messagingRoutingInfo.port, "61617");
-		assertEquals(messagingRoutingInfo.routingKey, "diva.updates.#");
+		assertEquals(messagingRoutingInfo.routingKey, "fedora.apim.*");
 		assertEquals(messagingRoutingInfo.username, "admin");
 		assertEquals(messagingRoutingInfo.password, "admin");
 
