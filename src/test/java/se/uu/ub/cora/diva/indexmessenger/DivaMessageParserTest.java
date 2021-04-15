@@ -20,6 +20,7 @@
 package se.uu.ub.cora.diva.indexmessenger;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
@@ -82,24 +83,20 @@ public class DivaMessageParserTest {
 		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
-	// TODO: NOT REALLY SURE WHERE TO EXTRACT THE TYPE FROM
-	// diva2: -> publication
-	// authority-person: -> person
+	@Test
+	public void testMessageParserReturnsCorrectType() throws Exception {
+		messageParser.parseHeadersAndMessage(headers, "");
+		assertEquals(messageParser.getParsedType(), "person");
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
 
-	// @Test
-	// public void testMessageParserReturnsCorrectType() throws Exception {
-	// messageParser.parseHeadersAndMessage(headers, message);
-	// assertEquals(messageParser.getParsedType(), "publication");
-	// assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
-	// }
-	//
-	// @Test
-	// public void testMessageParserReturnsTypeIdForPerson() throws Exception {
-	// headers.put("pid", "authority-person:666498");
-	// messageParser.parseHeadersAndMessage(headers, message);
-	// assertEquals(messageParser.getParsedType(), "person");
-	// }
-	//
+	@Test
+	public void testWrongMethodNameWorkOrderShouldNotBeCreated() throws Exception {
+		headers.put("methodName", "NOTmodifyDatastreamByReference");
+		messageParser.parseHeadersAndMessage(headers, "");
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
 	// @Test
 	// public void testMessageParserNotConsolidatedMessageWorkOrderShouldNotBeCreated()
 	// throws Exception {
@@ -109,13 +106,13 @@ public class DivaMessageParserTest {
 	// assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
 	// }
 	//
-	// @Test
-	// public void testMessageParserPidNullWorkOrderShouldNotBeCreated() throws Exception {
-	// headers.replace("pid", null);
-	// messageParser.parseHeadersAndMessage(headers, message);
-	// assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
-	// }
-	//
+	@Test
+	public void testMessageParserPidNullWorkOrderShouldNotBeCreated() throws Exception {
+		headers.replace("pid", null);
+		messageParser.parseHeadersAndMessage(headers, "");
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
 	// @Test
 	// public void testMessageParserNoPidWorkOrderShouldNotBeCreated() throws Exception {
 	// headers.remove("pid");
@@ -124,15 +121,15 @@ public class DivaMessageParserTest {
 	// }
 	//
 	// //
-	// @Test
-	// public void testMessageParserLogsWhenNoPidWorkOrderShouldNotBeCreated() throws Exception {
-	// headers.remove("pid");
-	//
-	// assertEquals(loggerFactory.getNoOfErrorLogMessagesUsingClassName(testedClassname), 0);
-	// messageParser.parseHeadersAndMessage(headers, message);
-	// assertEquals(loggerFactory.getNoOfErrorLogMessagesUsingClassName(testedClassname), 1);
-	// assertEquals(loggerFactory.getErrorLogMessageUsingClassNameAndNo(testedClassname, 0),
-	// "No pid found in header");
-	// }
+	@Test
+	public void testMessageParserLogsWhenNoPidWorkOrderShouldNotBeCreated() throws Exception {
+		headers.remove("pid");
+
+		assertEquals(loggerFactory.getNoOfErrorLogMessagesUsingClassName(testedClassname), 0);
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertEquals(loggerFactory.getNoOfErrorLogMessagesUsingClassName(testedClassname), 1);
+		assertEquals(loggerFactory.getErrorLogMessageUsingClassNameAndNo(testedClassname, 0),
+				"No pid found in header");
+	}
 
 }

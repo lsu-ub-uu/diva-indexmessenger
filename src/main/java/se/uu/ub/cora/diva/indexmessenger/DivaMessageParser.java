@@ -50,38 +50,28 @@ public class DivaMessageParser implements MessageParser {
 		logger.logInfoUsingMessage("MESSAGE: " + message);
 		logger.logInfoUsingMessage("------------------------------------------------------------");
 		extractRecordIdFromHeaders(headers);
-		if (shouldWorkOrderBeCreatedForMessage(message)) {
-			// extractParsedTypeFromId();
+		if (shouldWorkOrderBeCreatedForMessage(headers)) {
+			parsedType = "person";
 			workOrderShouldBeCreated = true;
 		}
-	}
-
-	private void extractParsedTypeFromId() {
-		parsedType = "publication";
-		String typePartOfId = extractTypePartOfId();
-		possiblySetTypeToPerson(typePartOfId);
-	}
-
-	private void possiblySetTypeToPerson(String typePartOfId) {
-		if ("authority-person".equals(typePartOfId)) {
-			parsedType = "person";
-		}
-	}
-
-	private String extractTypePartOfId() {
-		return parsedRecordId.substring(0, parsedRecordId.indexOf(":"));
-	}
-
-	private boolean shouldWorkOrderBeCreatedForMessage(String message) {
-		String typePartOfId = parsedRecordId.substring(0, parsedRecordId.indexOf(":"));
-		return "authority-person".equals(typePartOfId);
-		// return message.contains(TEXT_TO_IDENTIFY_MESSAGES_WHICH_DOES_TRIGGER_INDEXING);
 	}
 
 	private void extractRecordIdFromHeaders(Map<String, String> headers) {
 		parsedRecordId = headers.get("pid");
 		if (parsedRecordId == null)
 			throw IndexMessageException.withMessage("No pid found in header");
+	}
+
+	private boolean shouldWorkOrderBeCreatedForMessage(Map<String, String> headers) {
+		String methodName = headers.get("methodName");
+		String typePartOfId = extractTypePartOfId();
+		return "modifyDatastreamByReference".equals(methodName)
+				&& "authority-person".equals(typePartOfId);
+		// return message.contains(TEXT_TO_IDENTIFY_MESSAGES_WHICH_DOES_TRIGGER_INDEXING);
+	}
+
+	private String extractTypePartOfId() {
+		return parsedRecordId.substring(0, parsedRecordId.indexOf(":"));
 	}
 
 	private void handleError(IndexMessageException e) {
@@ -95,9 +85,6 @@ public class DivaMessageParser implements MessageParser {
 
 	@Override
 	public String getParsedType() {
-		// return top level diva type for all publication types when it is decided what it should be
-		// called
-
 		return parsedType;
 	}
 
