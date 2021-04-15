@@ -43,6 +43,11 @@ public class DivaMessageParser implements MessageParser {
 	}
 
 	private void tryToParseMessage(Map<String, String> headers, String message) {
+		logger.logInfoUsingMessage("------------------------------------------------------------");
+		logger.logInfoUsingMessage("HEADERS: " + headers);
+		logger.logInfoUsingMessage("");
+		logger.logInfoUsingMessage("MESSAGE: " + message);
+		logger.logInfoUsingMessage("------------------------------------------------------------");
 		if (shouldWorkOrderBeCreatedForMessage(message)) {
 			extractRecordIdFromHeaders(headers);
 			workOrderShouldBeCreated = true;
