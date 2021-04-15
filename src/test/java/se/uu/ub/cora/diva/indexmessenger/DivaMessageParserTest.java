@@ -84,19 +84,21 @@ public class DivaMessageParserTest {
 	}
 
 	// TODO: NOT REALLY SURE WHERE TO EXTRACT THE TYPE FROM
-	// @Test
-	// public void testMessageParserReturnsCorrectType() throws Exception {
-	// messageParser.parseHeadersAndMessage(headers, message);
-	// assertEquals(messageParser.getParsedType(), "place");
-	// // assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
-	// }
+	// diva2: -> publication
+	// authority-person: -> person
 
-	// TODO: Related to the TODO above. This test is ONLY intended for Coverage Test. Remove it when
-	// the ODO above has been completed.
 	@Test
-	public void testMessageParserReturnsTypeId() throws Exception {
+	public void testMessageParserReturnsCorrectType() throws Exception {
 		messageParser.parseHeadersAndMessage(headers, message);
-		assertEquals(messageParser.getParsedType(), "currentlyUnknownParent");
+		assertEquals(messageParser.getParsedType(), "publication");
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMessageParserReturnsTypeIdForPerson() throws Exception {
+		headers.put("pid", "authority-person:666498");
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertEquals(messageParser.getParsedType(), "person");
 	}
 
 	@Test
