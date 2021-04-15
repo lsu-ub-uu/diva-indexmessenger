@@ -32,6 +32,7 @@ public class DivaMessageParser implements MessageParser {
 	private Logger logger = LoggerProvider.getLoggerForClass(DivaMessageParser.class);
 	private String parsedRecordId;
 	private boolean workOrderShouldBeCreated = false;
+	private String parsedType;
 
 	@Override
 	public void parseHeadersAndMessage(Map<String, String> headers, String message) {
@@ -45,8 +46,25 @@ public class DivaMessageParser implements MessageParser {
 	private void tryToParseMessage(Map<String, String> headers, String message) {
 		if (shouldWorkOrderBeCreatedForMessage(message)) {
 			extractRecordIdFromHeaders(headers);
+			extractParsedTypeFromId();
 			workOrderShouldBeCreated = true;
 		}
+	}
+
+	private void extractParsedTypeFromId() {
+		parsedType = "publication";
+		String typePartOfId = extractTypePartOfId();
+		possiblySetTypeToPerson(typePartOfId);
+	}
+
+	private void possiblySetTypeToPerson(String typePartOfId) {
+		if ("authority-person".equals(typePartOfId)) {
+			parsedType = "person";
+		}
+	}
+
+	private String extractTypePartOfId() {
+		return parsedRecordId.substring(0, parsedRecordId.indexOf(":"));
 	}
 
 	private boolean shouldWorkOrderBeCreatedForMessage(String message) {
@@ -73,7 +91,7 @@ public class DivaMessageParser implements MessageParser {
 		// return top level diva type for all publication types when it is decided what it should be
 		// called
 
-		return "currentlyUnknownParent";
+		return parsedType;
 	}
 
 	@Override
