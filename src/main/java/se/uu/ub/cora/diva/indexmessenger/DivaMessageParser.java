@@ -49,9 +49,9 @@ public class DivaMessageParser implements MessageParser {
 		logger.logInfoUsingMessage("");
 		logger.logInfoUsingMessage("MESSAGE: " + message);
 		logger.logInfoUsingMessage("------------------------------------------------------------");
+		extractRecordIdFromHeaders(headers);
 		if (shouldWorkOrderBeCreatedForMessage(message)) {
-			extractRecordIdFromHeaders(headers);
-			extractParsedTypeFromId();
+			// extractParsedTypeFromId();
 			workOrderShouldBeCreated = true;
 		}
 	}
@@ -73,7 +73,9 @@ public class DivaMessageParser implements MessageParser {
 	}
 
 	private boolean shouldWorkOrderBeCreatedForMessage(String message) {
-		return message.contains(TEXT_TO_IDENTIFY_MESSAGES_WHICH_DOES_TRIGGER_INDEXING);
+		String typePartOfId = parsedRecordId.substring(0, parsedRecordId.indexOf(":"));
+		return "authority-person".equals(typePartOfId);
+		// return message.contains(TEXT_TO_IDENTIFY_MESSAGES_WHICH_DOES_TRIGGER_INDEXING);
 	}
 
 	private void extractRecordIdFromHeaders(Map<String, String> headers) {
@@ -103,4 +105,5 @@ public class DivaMessageParser implements MessageParser {
 	public boolean shouldWorkOrderBeCreatedForMessage() {
 		return workOrderShouldBeCreated;
 	}
+
 }
