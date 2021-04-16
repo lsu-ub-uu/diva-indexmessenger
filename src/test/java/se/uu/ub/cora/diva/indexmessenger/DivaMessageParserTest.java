@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Uppsala University Library
+ * Copyright 2019, 2021 Uppsala University Library
  *
  * This file is part of Cora.
  *
@@ -23,10 +23,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,9 +39,6 @@ public class DivaMessageParserTest {
 	private LoggerFactorySpy loggerFactory;
 	private String testedClassname = "DivaMessageParser";
 	private MessageParser messageParser;
-	private final static String TEST_RESOURCES_FILE_PATH = "./src/test/resources/";
-	private final static String JMS_MESSAGE_WHICH_DOES_TRIGGER_INDEXING = "JmsMessageWhichDoesTriggerIndexing.xml";
-	private final static String JMS_MESSAGE_WHICH_DOES_NOT_TRIGGER_INDEXING = "JmsMessageWhichDoesNotTriggerIndexing.xml";
 
 	@BeforeMethod
 	public void setUp() throws RuntimeException {
@@ -56,19 +49,7 @@ public class DivaMessageParserTest {
 		headers.put("methodName", "modifyDatastreamByReference");
 		headers.put("pid", "authority-person:666498");
 
-		tryToReadExampleMessageFromDivaClassic();
-
 		messageParser = new DivaMessageParser();
-	}
-
-	private void tryToReadExampleMessageFromDivaClassic() {
-		try {
-			message = Files.readString(
-					Path.of(TEST_RESOURCES_FILE_PATH + JMS_MESSAGE_WHICH_DOES_TRIGGER_INDEXING),
-					StandardCharsets.UTF_8);
-		} catch (IOException ioExecption) {
-			throw new RuntimeException("File could not be closed", ioExecption);
-		}
 	}
 
 	@Test
@@ -97,15 +78,20 @@ public class DivaMessageParserTest {
 		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
-	// @Test
-	// public void testMessageParserNotConsolidatedMessageWorkOrderShouldNotBeCreated()
-	// throws Exception {
-	// String messageNotTriggeringIndexing = Files.readString(
-	// Path.of(TEST_RESOURCES_FILE_PATH + JMS_MESSAGE_WHICH_DOES_NOT_TRIGGER_INDEXING));
-	// messageParser.parseHeadersAndMessage(headers, messageNotTriggeringIndexing);
-	// assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
-	// }
-	//
+	@Test
+	public void testNoMethodNameWorkOrderShouldNotBeCreated() throws Exception {
+		headers.remove("methodName");
+		messageParser.parseHeadersAndMessage(headers, "");
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testTypeNotHandledWorkOrderShouldNotBeCreated() throws Exception {
+		headers.put("pid", "diva2:45677");
+		messageParser.parseHeadersAndMessage(headers, "");
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
 	@Test
 	public void testMessageParserPidNullWorkOrderShouldNotBeCreated() throws Exception {
 		headers.replace("pid", null);
@@ -113,14 +99,13 @@ public class DivaMessageParserTest {
 		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
-	// @Test
-	// public void testMessageParserNoPidWorkOrderShouldNotBeCreated() throws Exception {
-	// headers.remove("pid");
-	// messageParser.parseHeadersAndMessage(headers, message);
-	// assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
-	// }
-	//
-	// //
+	@Test
+	public void testMessageParserNoPidWorkOrderShouldNotBeCreated() throws Exception {
+		headers.remove("pid");
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
 	@Test
 	public void testMessageParserLogsWhenNoPidWorkOrderShouldNotBeCreated() throws Exception {
 		headers.remove("pid");

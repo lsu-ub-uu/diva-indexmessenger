@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Uppsala University Library
+ * Copyright 2019, 2021 Uppsala University Library
  *
  * This file is part of Cora.
  *
@@ -27,8 +27,6 @@ import se.uu.ub.cora.logger.Logger;
 import se.uu.ub.cora.logger.LoggerProvider;
 
 public class DivaMessageParser implements MessageParser {
-	private static final String TEXT_TO_IDENTIFY_MESSAGES_WHICH_DOES_TRIGGER_INDEXING = ""
-			+ "<category term=\"MODEL_NOREF\" scheme=\"fedora-types:dsID\" label=\"xsd:string\"></category>";
 	private Logger logger = LoggerProvider.getLoggerForClass(DivaMessageParser.class);
 	private String parsedRecordId;
 	private boolean workOrderShouldBeCreated = false;
@@ -49,14 +47,14 @@ public class DivaMessageParser implements MessageParser {
 		logger.logInfoUsingMessage("");
 		logger.logInfoUsingMessage("MESSAGE: " + message);
 		logger.logInfoUsingMessage("------------------------------------------------------------");
-		extractRecordIdFromHeaders(headers);
+		setRecordIdFromHeaders(headers);
 		if (shouldWorkOrderBeCreatedForMessage(headers)) {
 			parsedType = "person";
 			workOrderShouldBeCreated = true;
 		}
 	}
 
-	private void extractRecordIdFromHeaders(Map<String, String> headers) {
+	private void setRecordIdFromHeaders(Map<String, String> headers) {
 		parsedRecordId = headers.get("pid");
 		if (parsedRecordId == null)
 			throw IndexMessageException.withMessage("No pid found in header");
@@ -65,13 +63,19 @@ public class DivaMessageParser implements MessageParser {
 	private boolean shouldWorkOrderBeCreatedForMessage(Map<String, String> headers) {
 		String methodName = headers.get("methodName");
 		String typePartOfId = extractTypePartOfId();
-		return "modifyDatastreamByReference".equals(methodName)
-				&& "authority-person".equals(typePartOfId);
-		// return message.contains(TEXT_TO_IDENTIFY_MESSAGES_WHICH_DOES_TRIGGER_INDEXING);
+		return methodNameIsCorrect(methodName) && typeIsAuthorityPerson(typePartOfId);
 	}
 
 	private String extractTypePartOfId() {
 		return parsedRecordId.substring(0, parsedRecordId.indexOf(":"));
+	}
+
+	private boolean methodNameIsCorrect(String methodName) {
+		return "modifyDatastreamByReference".equals(methodName);
+	}
+
+	private boolean typeIsAuthorityPerson(String typePartOfId) {
+		return "authority-person".equals(typePartOfId);
 	}
 
 	private void handleError(IndexMessageException e) {
