@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Uppsala University Library
+ * Copyright 2019, 2021 Uppsala University Library
  *
  * This file is part of Cora.
  *
@@ -29,7 +29,9 @@ public class MessageParserSpy implements MessageParser {
 	public String message;
 	public boolean getParsedIdWasCalled = false;
 	public boolean getParsedTypeWasCalled = false;
+	public boolean getModificationTypeWasCalled = false;
 	public boolean createWorkOrder = true;
+	public String modificationType = "update";
 
 	@Override
 	public void parseHeadersAndMessage(Map<String, String> headers, String message) {
@@ -39,13 +41,13 @@ public class MessageParserSpy implements MessageParser {
 	}
 
 	@Override
-	public String getParsedId() {
+	public String getRecordId() {
 		getParsedIdWasCalled = true;
 		return "someParsedIdFromMessageParserSpy";
 	}
 
 	@Override
-	public String getParsedType() {
+	public String getRecordType() {
 		getParsedTypeWasCalled = true;
 		return "someParsedTypeFromMessageParserSpy";
 	}
@@ -53,6 +55,12 @@ public class MessageParserSpy implements MessageParser {
 	@Override
 	public boolean shouldWorkOrderBeCreatedForMessage() {
 		return createWorkOrder;
+	}
+
+	@Override
+	public String getModificationType() {
+		getModificationTypeWasCalled = true;
+		return modificationType;
 	}
 
 }

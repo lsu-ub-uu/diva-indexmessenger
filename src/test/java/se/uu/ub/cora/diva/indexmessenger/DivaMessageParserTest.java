@@ -23,6 +23,10 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,6 +43,9 @@ public class DivaMessageParserTest {
 	private LoggerFactorySpy loggerFactory;
 	private String testedClassname = "DivaMessageParser";
 	private MessageParser messageParser;
+	private final static String TEST_RESOURCES_FILE_PATH = "./src/test/resources/";
+	private final static String JMS_MESSAGE_WHICH_DOES_TRIGGER_INDEXING = "JmsMessageWhichDoesTriggerIndexing.xml";
+	private final static String JMS_MESSAGE_WHEN_DELETE = "JmsMessageWhenDelete.xml";
 
 	@BeforeMethod
 	public void setUp() throws RuntimeException {
@@ -49,7 +56,19 @@ public class DivaMessageParserTest {
 		headers.put("methodName", "modifyDatastreamByReference");
 		headers.put("pid", "authority-person:666498");
 
+		tryToReadExampleMessageFromDivaClassic();
+
 		messageParser = new DivaMessageParser();
+	}
+
+	private void tryToReadExampleMessageFromDivaClassic() {
+		try {
+			message = Files.readString(
+					Path.of(TEST_RESOURCES_FILE_PATH + JMS_MESSAGE_WHICH_DOES_TRIGGER_INDEXING),
+					StandardCharsets.UTF_8);
+		} catch (IOException ioExecption) {
+			throw new RuntimeException("File could not be closed", ioExecption);
+		}
 	}
 
 	@Test
@@ -59,43 +78,43 @@ public class DivaMessageParserTest {
 
 	@Test
 	public void testMessageParserReturnsCorrectId() throws Exception {
-		messageParser.parseHeadersAndMessage(headers, "");
-		assertEquals(messageParser.getParsedId(), headers.get("pid"));
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertEquals(messageParser.getRecordId(), headers.get("pid"));
 		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
 	@Test
 	public void testMessageParserReturnsCorrectType() throws Exception {
-		messageParser.parseHeadersAndMessage(headers, "");
-		assertEquals(messageParser.getParsedType(), "person");
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertEquals(messageParser.getRecordType(), "person");
 		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
 	@Test
 	public void testWrongMethodNameWorkOrderShouldNotBeCreated() throws Exception {
 		headers.put("methodName", "NOTmodifyDatastreamByReference");
-		messageParser.parseHeadersAndMessage(headers, "");
+		messageParser.parseHeadersAndMessage(headers, message);
 		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
 	@Test
 	public void testNoMethodNameWorkOrderShouldNotBeCreated() throws Exception {
 		headers.remove("methodName");
-		messageParser.parseHeadersAndMessage(headers, "");
+		messageParser.parseHeadersAndMessage(headers, message);
 		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
 	@Test
 	public void testTypeNotHandledWorkOrderShouldNotBeCreated() throws Exception {
 		headers.put("pid", "diva2:45677");
-		messageParser.parseHeadersAndMessage(headers, "");
+		messageParser.parseHeadersAndMessage(headers, message);
 		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
 	@Test
 	public void testMessageParserPidNullWorkOrderShouldNotBeCreated() throws Exception {
 		headers.replace("pid", null);
-		messageParser.parseHeadersAndMessage(headers, "");
+		messageParser.parseHeadersAndMessage(headers, message);
 		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
@@ -115,6 +134,24 @@ public class DivaMessageParserTest {
 		assertEquals(loggerFactory.getNoOfErrorLogMessagesUsingClassName(testedClassname), 1);
 		assertEquals(loggerFactory.getErrorLogMessageUsingClassNameAndNo(testedClassname, 0),
 				"No pid found in header");
+	}
+
+	@Test
+	public void testGetModificationTypeWhenUpdate() {
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertEquals(messageParser.getModificationType(), "update");
+	}
+
+	@Test
+	public void testGetModificationTypeWhenDelete() throws IOException {
+		String messageWhenDelete = Files
+				.readString(Path.of(TEST_RESOURCES_FILE_PATH + JMS_MESSAGE_WHEN_DELETE));
+		headers.put("methodName", "modifyObject");
+		messageParser.parseHeadersAndMessage(headers, messageWhenDelete);
+
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+		assertEquals(messageParser.getModificationType(), "delete");
 	}
 
 }

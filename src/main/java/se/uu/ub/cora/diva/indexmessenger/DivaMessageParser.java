@@ -27,10 +27,13 @@ import se.uu.ub.cora.logger.Logger;
 import se.uu.ub.cora.logger.LoggerProvider;
 
 public class DivaMessageParser implements MessageParser {
+	private static final String TEXT_TO_IDENTIFY_MESSAGES_FOR_DELETE = ""
+			+ "<category term=\"D\" scheme=\"fedora-types:state\" label=\"xsd:string\"></category>";
 	private Logger logger = LoggerProvider.getLoggerForClass(DivaMessageParser.class);
 	private String parsedRecordId;
 	private boolean workOrderShouldBeCreated = false;
 	private String parsedType;
+	private String modificationType;
 
 	@Override
 	public void parseHeadersAndMessage(Map<String, String> headers, String message) {
@@ -41,28 +44,65 @@ public class DivaMessageParser implements MessageParser {
 		}
 	}
 
+	// shouldbecreated = true
+	// modifyDatastreamByReference
+	// modifyObject (delete) - i kombination med TEXT_TO_IDENTIFY
+	// purgeObject - inte hanterat
+	// addDatastream inte hanterat
+
 	private void tryToParseMessage(Map<String, String> headers, String message) {
-		logger.logInfoUsingMessage("------------------------------------------------------------");
-		logger.logInfoUsingMessage("HEADERS: " + headers);
-		logger.logInfoUsingMessage("");
-		logger.logInfoUsingMessage("MESSAGE: " + message);
-		logger.logInfoUsingMessage("------------------------------------------------------------");
+		logForTestingPurposes(headers, message);
+
+		throwErrorIfNoPid(headers);
+
+		// check if workorder should be created at all
+		// OR set values first, check to be created after??
+
 		setRecordIdFromHeaders(headers);
-		if (shouldWorkOrderBeCreatedForMessage(headers)) {
+		setModificationTypeFromMessageAndHeaders(message, headers);
+		if (workOrderShouldBeCreatedForMessage(headers, message)) {
 			parsedType = "person";
 			workOrderShouldBeCreated = true;
 		}
 	}
 
-	private void setRecordIdFromHeaders(Map<String, String> headers) {
-		parsedRecordId = headers.get("pid");
-		if (parsedRecordId == null)
-			throw IndexMessageException.withMessage("No pid found in header");
+	private void logForTestingPurposes(Map<String, String> headers, String message) {
+		logger.logInfoUsingMessage("------------------------------------------------------------");
+		logger.logInfoUsingMessage("HEADERS: " + headers);
+		logger.logInfoUsingMessage("");
+		logger.logInfoUsingMessage("MESSAGE: " + message);
+		logger.logInfoUsingMessage("------------------------------------------------------------");
 	}
 
-	private boolean shouldWorkOrderBeCreatedForMessage(Map<String, String> headers) {
+	private void setModificationTypeFromMessageAndHeaders(String message,
+			Map<String, String> headers) {
+		String methodName = headers.get("methodName");
+		modificationType = "update";
+		if (messageIsFromDelete(message, methodName)) {
+			modificationType = "delete";
+		}
+	}
+
+	private boolean messageIsFromDelete(String message, String methodName) {
+		return "modifyObject".equals(methodName)
+				&& message.contains(TEXT_TO_IDENTIFY_MESSAGES_FOR_DELETE);
+	}
+
+	private void setRecordIdFromHeaders(Map<String, String> headers) {
+		parsedRecordId = headers.get("pid");
+	}
+
+	private void throwErrorIfNoPid(Map<String, String> headers) {
+		if (headers.get("pid") == null) {
+			throw IndexMessageException.withMessage("No pid found in header");
+		}
+	}
+
+	private boolean workOrderShouldBeCreatedForMessage(Map<String, String> headers,
+			String message) {
 		String methodName = headers.get("methodName");
 		String typePartOfId = extractTypePartOfId();
+
 		return methodNameIsCorrect(methodName) && typeIsAuthorityPerson(typePartOfId);
 	}
 
@@ -71,7 +111,8 @@ public class DivaMessageParser implements MessageParser {
 	}
 
 	private boolean methodNameIsCorrect(String methodName) {
-		return "modifyDatastreamByReference".equals(methodName);
+		return "modifyDatastreamByReference".equals(methodName)
+				|| "modifyObject".equals(methodName);
 	}
 
 	private boolean typeIsAuthorityPerson(String typePartOfId) {
@@ -83,18 +124,23 @@ public class DivaMessageParser implements MessageParser {
 	}
 
 	@Override
-	public String getParsedId() {
+	public String getRecordId() {
 		return parsedRecordId;
 	}
 
 	@Override
-	public String getParsedType() {
+	public String getRecordType() {
 		return parsedType;
 	}
 
 	@Override
 	public boolean shouldWorkOrderBeCreatedForMessage() {
 		return workOrderShouldBeCreated;
+	}
+
+	@Override
+	public String getModificationType() {
+		return modificationType;
 	}
 
 }
