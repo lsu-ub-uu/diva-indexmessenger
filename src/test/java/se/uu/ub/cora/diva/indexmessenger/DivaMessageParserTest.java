@@ -76,6 +76,110 @@ public class DivaMessageParserTest {
 		messageParser = new DivaMessageParser();
 	}
 
+	/************ Test IF workorder should be created *************/
+	@Test
+	public void testNoMethodNameWorkOrderShouldNotBeCreated() throws Exception {
+		headers.remove("methodName");
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testWrongMethodNameWorkOrderShouldNotBeCreated() throws Exception {
+		headers.put("methodName", "NOTmodifyDatastreamByReference");
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMethodNameModifyDatastreamByReferenceWorkOrderShouldBeCreated()
+			throws Exception {
+		headers.put("methodName", "modifyDatastreamByReference");
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMethodNameModifyObjectANDDeleteMessageWorkOrderShouldBeCreated()
+			throws Exception {
+		String messageWhenDelete = Files
+				.readString(Path.of(TEST_RESOURCES_FILE_PATH + JMS_MESSAGE_WHEN_DELETE));
+		headers.put("methodName", "modifyObject");
+
+		messageParser.parseHeadersAndMessage(headers, messageWhenDelete);
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMethodNameModifyObjectNOTDeleteMessageWorkOrderShouldNotBeCreated()
+			throws Exception {
+		headers.put("methodName", "modifyObject");
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMethodNamePurgeObjectWorkOrderShouldBeCreated() throws Exception {
+		headers.put("methodName", "purgeObject");
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMethodNameAddDatastreamWorkOrderShouldBeCreated() throws Exception {
+		headers.put("methodName", "addDatastream");
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testTypeNotHandledWorkOrderShouldNotBeCreated() throws Exception {
+		headers.put("pid", "diva2:45677");
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMessageParserPidNullWorkOrderShouldNotBeCreated() throws Exception {
+		headers.replace("pid", null);
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMessageParserNoPidWorkOrderShouldNotBeCreated() throws Exception {
+		headers.remove("pid");
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMessageParserLogsWhenNoPidWorkOrderShouldNotBeCreated() throws Exception {
+		headers.remove("pid");
+
+		assertEquals(loggerFactory.getNoOfErrorLogMessagesUsingClassName(testedClassname), 0);
+
+		messageParser.parseHeadersAndMessage(headers, message);
+
+		assertEquals(loggerFactory.getNoOfErrorLogMessagesUsingClassName(testedClassname), 1);
+		assertEquals(loggerFactory.getErrorLogMessageUsingClassNameAndNo(testedClassname, 0),
+				"No pid found in header");
+	}
+
+	/************ End test IF workorder should be created *************/
+	/************ Test correct values are set *************/
+
+	// TODO: test for modification type when purgeobject
+	// TODO: test for modification type when addDatastream
+
 	@Test
 	public void testMessageParserReturnsCorrectId() throws Exception {
 		messageParser.parseHeadersAndMessage(headers, message);
@@ -88,52 +192,6 @@ public class DivaMessageParserTest {
 		messageParser.parseHeadersAndMessage(headers, message);
 		assertEquals(messageParser.getRecordType(), "person");
 		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
-	}
-
-	@Test
-	public void testWrongMethodNameWorkOrderShouldNotBeCreated() throws Exception {
-		headers.put("methodName", "NOTmodifyDatastreamByReference");
-		messageParser.parseHeadersAndMessage(headers, message);
-		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
-	}
-
-	@Test
-	public void testNoMethodNameWorkOrderShouldNotBeCreated() throws Exception {
-		headers.remove("methodName");
-		messageParser.parseHeadersAndMessage(headers, message);
-		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
-	}
-
-	@Test
-	public void testTypeNotHandledWorkOrderShouldNotBeCreated() throws Exception {
-		headers.put("pid", "diva2:45677");
-		messageParser.parseHeadersAndMessage(headers, message);
-		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
-	}
-
-	@Test
-	public void testMessageParserPidNullWorkOrderShouldNotBeCreated() throws Exception {
-		headers.replace("pid", null);
-		messageParser.parseHeadersAndMessage(headers, message);
-		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
-	}
-
-	@Test
-	public void testMessageParserNoPidWorkOrderShouldNotBeCreated() throws Exception {
-		headers.remove("pid");
-		messageParser.parseHeadersAndMessage(headers, message);
-		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
-	}
-
-	@Test
-	public void testMessageParserLogsWhenNoPidWorkOrderShouldNotBeCreated() throws Exception {
-		headers.remove("pid");
-
-		assertEquals(loggerFactory.getNoOfErrorLogMessagesUsingClassName(testedClassname), 0);
-		messageParser.parseHeadersAndMessage(headers, message);
-		assertEquals(loggerFactory.getNoOfErrorLogMessagesUsingClassName(testedClassname), 1);
-		assertEquals(loggerFactory.getErrorLogMessageUsingClassNameAndNo(testedClassname, 0),
-				"No pid found in header");
 	}
 
 	@Test

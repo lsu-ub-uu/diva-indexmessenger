@@ -103,7 +103,8 @@ public class DivaMessageParser implements MessageParser {
 		String methodName = headers.get("methodName");
 		String typePartOfId = extractTypePartOfId();
 
-		return methodNameIsCorrect(methodName) && typeIsAuthorityPerson(typePartOfId);
+		return (methodNameIsCorrect(methodName) || messageIsFromDelete(message, methodName))
+				&& typeIsAuthorityPerson(typePartOfId);
 	}
 
 	private String extractTypePartOfId() {
@@ -111,8 +112,8 @@ public class DivaMessageParser implements MessageParser {
 	}
 
 	private boolean methodNameIsCorrect(String methodName) {
-		return "modifyDatastreamByReference".equals(methodName)
-				|| "modifyObject".equals(methodName);
+		return "modifyDatastreamByReference".equals(methodName) || "purgeObject".equals(methodName)
+				|| "addDatastream".equals(methodName);
 	}
 
 	private boolean typeIsAuthorityPerson(String typePartOfId) {
