@@ -58,11 +58,13 @@ public class DivaMessageParser implements MessageParser {
 		// check if workorder should be created at all
 		// OR set values first, check to be created after??
 
-		setRecordIdFromHeaders(headers);
-		setModificationTypeFromMessageAndHeaders(message, headers);
-		if (workOrderShouldBeCreatedForMessage(headers, message)) {
+		workOrderShouldBeCreated = workOrderShouldBeCreatedForMessage(headers, message);
+		// if (workOrderShouldBeCreatedForMessage(headers, message)) {
+		if (workOrderShouldBeCreated) {
+			setRecordIdFromHeaders(headers);
+			setModificationTypeFromMessageAndHeaders(message, headers);
 			parsedType = "person";
-			workOrderShouldBeCreated = true;
+			// workOrderShouldBeCreated = true;
 		}
 	}
 
@@ -101,14 +103,16 @@ public class DivaMessageParser implements MessageParser {
 	private boolean workOrderShouldBeCreatedForMessage(Map<String, String> headers,
 			String message) {
 		String methodName = headers.get("methodName");
-		String typePartOfId = extractTypePartOfId();
+		String pid = headers.get("pid");
+		String typePartOfId = extractTypePartOfId(pid);
 
 		return (methodNameIsCorrect(methodName) || messageIsFromDelete(message, methodName))
 				&& typeIsAuthorityPerson(typePartOfId);
 	}
 
-	private String extractTypePartOfId() {
-		return parsedRecordId.substring(0, parsedRecordId.indexOf(":"));
+	private String extractTypePartOfId(String pid) {
+
+		return pid.substring(0, pid.indexOf(":"));
 	}
 
 	private boolean methodNameIsCorrect(String methodName) {
