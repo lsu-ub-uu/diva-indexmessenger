@@ -21,6 +21,7 @@ package se.uu.ub.cora.diva.indexmessenger;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
@@ -76,7 +77,6 @@ public class DivaMessageParserTest {
 		messageParser = new DivaMessageParser();
 	}
 
-	/************ Test IF workorder should be created *************/
 	@Test
 	public void testNoMethodNameWorkOrderShouldNotBeCreated() throws Exception {
 		headers.remove("methodName");
@@ -174,11 +174,15 @@ public class DivaMessageParserTest {
 				"No pid found in header");
 	}
 
-	/************ End test IF workorder should be created *************/
-	/************ Test correct values are set *************/
+	@Test
+	public void testNoMethodNameNoValuesShouldBeSet() throws Exception {
+		headers.remove("methodName");
 
-	// TODO: test for modification type when purgeobject
-	// TODO: test for modification type when addDatastream
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertNull(messageParser.getRecordId());
+		assertNull(messageParser.getRecordType());
+		assertNull(messageParser.getModificationType());
+	}
 
 	@Test
 	public void testMessageParserReturnsCorrectId() throws Exception {
@@ -196,7 +200,13 @@ public class DivaMessageParserTest {
 
 	@Test
 	public void testGetModificationTypeWhenUpdate() {
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertEquals(messageParser.getModificationType(), "update");
+	}
 
+	@Test
+	public void testGetModificationTypeWhenCreate() {
+		headers.put("methodName", "addDatastream");
 		messageParser.parseHeadersAndMessage(headers, message);
 		assertEquals(messageParser.getModificationType(), "update");
 	}
@@ -207,6 +217,15 @@ public class DivaMessageParserTest {
 				.readString(Path.of(TEST_RESOURCES_FILE_PATH + JMS_MESSAGE_WHEN_DELETE));
 		headers.put("methodName", "modifyObject");
 		messageParser.parseHeadersAndMessage(headers, messageWhenDelete);
+
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+		assertEquals(messageParser.getModificationType(), "delete");
+	}
+
+	@Test
+	public void testGetModificationTypeWhenPurge() throws IOException {
+		headers.put("methodName", "purgeObject");
+		messageParser.parseHeadersAndMessage(headers, message);
 
 		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
 		assertEquals(messageParser.getModificationType(), "delete");

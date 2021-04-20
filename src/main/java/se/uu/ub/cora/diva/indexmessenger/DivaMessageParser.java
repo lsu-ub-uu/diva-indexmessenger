@@ -44,54 +44,10 @@ public class DivaMessageParser implements MessageParser {
 		}
 	}
 
-	// shouldbecreated = true
-	// modifyDatastreamByReference
-	// modifyObject (delete) - i kombination med TEXT_TO_IDENTIFY
-	// purgeObject - inte hanterat
-	// addDatastream inte hanterat
-
 	private void tryToParseMessage(Map<String, String> headers, String message) {
-		logForTestingPurposes(headers, message);
-
 		throwErrorIfNoPid(headers);
-
-		// check if workorder should be created at all
-		// OR set values first, check to be created after??
-
 		workOrderShouldBeCreated = workOrderShouldBeCreatedForMessage(headers, message);
-		// if (workOrderShouldBeCreatedForMessage(headers, message)) {
-		if (workOrderShouldBeCreated) {
-			setRecordIdFromHeaders(headers);
-			setModificationTypeFromMessageAndHeaders(message, headers);
-			parsedType = "person";
-			// workOrderShouldBeCreated = true;
-		}
-	}
-
-	private void logForTestingPurposes(Map<String, String> headers, String message) {
-		logger.logInfoUsingMessage("------------------------------------------------------------");
-		logger.logInfoUsingMessage("HEADERS: " + headers);
-		logger.logInfoUsingMessage("");
-		logger.logInfoUsingMessage("MESSAGE: " + message);
-		logger.logInfoUsingMessage("------------------------------------------------------------");
-	}
-
-	private void setModificationTypeFromMessageAndHeaders(String message,
-			Map<String, String> headers) {
-		String methodName = headers.get("methodName");
-		modificationType = "update";
-		if (messageIsFromDelete(message, methodName)) {
-			modificationType = "delete";
-		}
-	}
-
-	private boolean messageIsFromDelete(String message, String methodName) {
-		return "modifyObject".equals(methodName)
-				&& message.contains(TEXT_TO_IDENTIFY_MESSAGES_FOR_DELETE);
-	}
-
-	private void setRecordIdFromHeaders(Map<String, String> headers) {
-		parsedRecordId = headers.get("pid");
+		possibleSetValues(headers, message);
 	}
 
 	private void throwErrorIfNoPid(Map<String, String> headers) {
@@ -103,25 +59,63 @@ public class DivaMessageParser implements MessageParser {
 	private boolean workOrderShouldBeCreatedForMessage(Map<String, String> headers,
 			String message) {
 		String methodName = headers.get("methodName");
-		String pid = headers.get("pid");
-		String typePartOfId = extractTypePartOfId(pid);
+		String typePartOfId = extractTypePartOfId(headers);
 
-		return (methodNameIsCorrect(methodName) || messageIsFromDelete(message, methodName))
-				&& typeIsAuthorityPerson(typePartOfId);
+		return calculateWorkOrderShouldBeCreated(message, methodName, typePartOfId);
 	}
 
-	private String extractTypePartOfId(String pid) {
-
+	private String extractTypePartOfId(Map<String, String> headers) {
+		String pid = headers.get("pid");
 		return pid.substring(0, pid.indexOf(":"));
 	}
 
-	private boolean methodNameIsCorrect(String methodName) {
-		return "modifyDatastreamByReference".equals(methodName) || "purgeObject".equals(methodName)
+	private boolean calculateWorkOrderShouldBeCreated(String message, String methodName,
+			String typePartOfId) {
+		return (methodNameIsRelevant(methodName) || isDeleteMessage(message, methodName))
+				&& typeIsAuthorityPerson(typePartOfId);
+	}
+
+	private boolean methodNameIsRelevant(String methodName) {
+		return "modifyDatastreamByReference".equals(methodName) || isPurgeMessage(methodName)
 				|| "addDatastream".equals(methodName);
+	}
+
+	private boolean isPurgeMessage(String methodName) {
+		return "purgeObject".equals(methodName);
+	}
+
+	private boolean isDeleteMessage(String message, String methodName) {
+		return "modifyObject".equals(methodName)
+				&& message.contains(TEXT_TO_IDENTIFY_MESSAGES_FOR_DELETE);
 	}
 
 	private boolean typeIsAuthorityPerson(String typePartOfId) {
 		return "authority-person".equals(typePartOfId);
+	}
+
+	private void possibleSetValues(Map<String, String> headers, String message) {
+		if (workOrderShouldBeCreated) {
+			parsedRecordId = headers.get("pid");
+			parsedType = "person";
+			setModificationTypeFromMessageAndHeaders(message, headers);
+		}
+	}
+
+	private void setModificationTypeFromMessageAndHeaders(String message,
+			Map<String, String> headers) {
+		String methodName = headers.get("methodName");
+		modificationType = "update";
+		possiblyChangeModificationTypeToDelete(message, methodName);
+	}
+
+	private void possiblyChangeModificationTypeToDelete(String message, String methodName) {
+		if (messageIsFromDeleteOrPurge(message, methodName)) {
+			modificationType = "delete";
+		}
+	}
+
+	private boolean messageIsFromDeleteOrPurge(String message, String methodName) {
+		return isDeleteMessage(message, methodName) || isPurgeMessage(methodName);
 	}
 
 	private void handleError(IndexMessageException e) {
