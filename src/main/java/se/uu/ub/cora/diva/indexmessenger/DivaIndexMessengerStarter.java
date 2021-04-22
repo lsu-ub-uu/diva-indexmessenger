@@ -45,17 +45,43 @@ public class DivaIndexMessengerStarter {
 	public static void main(String[] args) {
 		String propertiesFileName = getFilenameFromArgsOrDefault(args);
 		logger.logInfoUsingMessage("DivaIndexMessengerStarter starting...");
-		//
-		try (InputStream input = DivaIndexMessengerStarter.class.getClassLoader()
-				.getResourceAsStream(propertiesFileName)) {
 
-			Properties properties = loadProperites(input);
-			createIndexMessengerListener(properties);
+		Properties properties = null;
+		if (args.length == 1) {
+			properties = readPropertiesFromFile(propertiesFileName, properties);
+		} else if (args.length == 9) {
+			properties = readPropertiesFromArguments(args);
+		} else {
+			logger.logFatalUsingMessage(
+					"Unable to start DivaIndexMessengerStarter, number of arguments should be 9.");
+
+		}
+		createIndexMessengerListener(properties);
+	}
+
+	private static Properties readPropertiesFromArguments(String[] args) {
+		Properties properties = null;
+		try {
+			properties = loadProperitesFromArgs(args);
 			logger.logInfoUsingMessage("DivaIndexMessengerStarter started");
 		} catch (Exception ex) {
 			logger.logFatalUsingMessageAndException("Unable to start DivaIndexMessengerStarter ",
 					ex);
 		}
+		return properties;
+	}
+
+	private static Properties readPropertiesFromFile(String propertiesFileName,
+			Properties properties) {
+		try (InputStream input = DivaIndexMessengerStarter.class.getClassLoader()
+				.getResourceAsStream(propertiesFileName)) {
+			properties = loadProperitesFromFile(input);
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return properties;
 	}
 
 	private static String getFilenameFromArgsOrDefault(String[] args) {
@@ -65,8 +91,25 @@ public class DivaIndexMessengerStarter {
 		return "divaIndexer.properties";
 	}
 
-	private static Properties loadProperites(InputStream input) throws IOException {
+	private static Properties loadProperitesFromArgs(String[] args) throws IOException {
 		Properties properties = new Properties();
+		properties.put("messaging.hostname", args[0]);
+		properties.put("messaging.port", args[1]);
+		properties.put("messaging.routingKey", args[2]);
+		properties.put("messaging.username", args[3]);
+		properties.put("messaging.password", args[4]);
+		properties.put("appTokenVerifierUrl", args[5]);
+		properties.put("baseUrl", args[6]);
+		properties.put("cora.userId", args[7]);
+		properties.put("cora.appToken", args[8]);
+
+		// properties.load(input);
+		return properties;
+	}
+
+	private static Properties loadProperitesFromFile(InputStream input) throws IOException {
+		Properties properties = new Properties();
+
 		properties.load(input);
 		return properties;
 	}
@@ -111,6 +154,13 @@ public class DivaIndexMessengerStarter {
 					"Property with name " + propertyName + " not found in properties");
 		}
 	}
+	// private static void throwErrorIfPropertyNameIsMissing(Properties properties,
+	// String propertyName) {
+	// if (!properties.containsKey(propertyName)) {
+	// throw new RuntimeException(
+	// "Property with name " + propertyName + " not found in properties");
+	// }
+	// }
 
 	private static JmsMessageRoutingInfo createMessageRoutingInfoFromProperties(
 			Properties properties) {
