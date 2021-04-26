@@ -66,7 +66,7 @@ public class DivaMessageParser implements MessageParser {
 
 	private String extractTypePartOfId(Map<String, String> headers) {
 		String pid = headers.get("pid");
-		return pid.substring(0, pid.indexOf(":"));
+		return pid.substring(0, pid.indexOf(':'));
 	}
 
 	private boolean calculateWorkOrderShouldBeCreated(String message, String methodName,

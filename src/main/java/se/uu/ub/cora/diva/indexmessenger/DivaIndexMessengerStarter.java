@@ -95,7 +95,7 @@ public class DivaIndexMessengerStarter {
 		return "divaIndexer.properties";
 	}
 
-	private static Properties loadProperitesFromArgs(String[] args) throws IOException {
+	private static Properties loadProperitesFromArgs(String[] args) {
 		Properties properties = new Properties();
 		properties.put("messaging.hostname", args[0]);
 		properties.put("messaging.port", args[1]);
