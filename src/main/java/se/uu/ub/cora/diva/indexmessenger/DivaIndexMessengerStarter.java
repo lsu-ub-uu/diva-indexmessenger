@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Uppsala University Library
+ * Copyright 2019, 2021 Uppsala University Library
  *
  * This file is part of Cora.
  *
@@ -34,54 +34,58 @@ import se.uu.ub.cora.messaging.JmsMessageRoutingInfo;
 
 public class DivaIndexMessengerStarter {
 
+	protected static IndexMessengerListener indexMessengerListener;
+
 	private static Logger logger = LoggerProvider
 			.getLoggerForClass(DivaIndexMessengerStarter.class);
-
-	protected static IndexMessengerListener indexMessengerListener;
 
 	private DivaIndexMessengerStarter() {
 	}
 
 	public static void main(String[] args) {
-		String propertiesFileName = getFilenameFromArgsOrDefault(args);
 		logger.logInfoUsingMessage("DivaIndexMessengerStarter starting...");
-
-		Properties properties = null;
-		if (args.length == 1) {
-			properties = readPropertiesFromFile(propertiesFileName, properties);
-		} else if (args.length == 9) {
-			properties = readPropertiesFromArguments(args);
-		} else {
-			logger.logFatalUsingMessage(
-					"Unable to start DivaIndexMessengerStarter, number of arguments should be 9.");
-
-		}
-		createIndexMessengerListener(properties);
+		tryToCreateIndexMessengerListener(args);
 	}
 
-	private static Properties readPropertiesFromArguments(String[] args) {
-		Properties properties = null;
+	private static void tryToCreateIndexMessengerListener(String[] args) {
 		try {
-			properties = loadProperitesFromArgs(args);
+			Properties properties = loadProperties(args);
+			createIndexMessengerListener(properties);
 			logger.logInfoUsingMessage("DivaIndexMessengerStarter started");
 		} catch (Exception ex) {
 			logger.logFatalUsingMessageAndException("Unable to start DivaIndexMessengerStarter ",
 					ex);
 		}
-		return properties;
 	}
 
-	private static Properties readPropertiesFromFile(String propertiesFileName,
-			Properties properties) {
+	private static Properties loadProperties(String[] args) throws IOException {
+		if (propertiesShouldBeReadFromFile(args)) {
+			String propertiesFileName = getFilenameFromArgsOrDefault(args);
+			return readPropertiesFromFile(propertiesFileName);
+		} else if (propertiesProvidedAsArguments(args)) {
+			return loadProperitesFromArgs(args);
+		}
+		throw new RuntimeException("Number of arguments should be 9.");
+
+	}
+
+	private static boolean propertiesShouldBeReadFromFile(String[] args) {
+		return args.length == 0 || fileNameProvidedAsArgument(args);
+	}
+
+	private static boolean fileNameProvidedAsArgument(String[] args) {
+		return args.length == 1;
+	}
+
+	private static boolean propertiesProvidedAsArguments(String[] args) {
+		return args.length == 9;
+	}
+
+	private static Properties readPropertiesFromFile(String propertiesFileName) throws IOException {
 		try (InputStream input = DivaIndexMessengerStarter.class.getClassLoader()
 				.getResourceAsStream(propertiesFileName)) {
-			properties = loadProperitesFromFile(input);
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return loadProperitesFromFile(input);
 		}
-		return properties;
 	}
 
 	private static String getFilenameFromArgsOrDefault(String[] args) {
@@ -103,7 +107,6 @@ public class DivaIndexMessengerStarter {
 		properties.put("cora.userId", args[7]);
 		properties.put("cora.appToken", args[8]);
 
-		// properties.load(input);
 		return properties;
 	}
 
@@ -154,13 +157,6 @@ public class DivaIndexMessengerStarter {
 					"Property with name " + propertyName + " not found in properties");
 		}
 	}
-	// private static void throwErrorIfPropertyNameIsMissing(Properties properties,
-	// String propertyName) {
-	// if (!properties.containsKey(propertyName)) {
-	// throw new RuntimeException(
-	// "Property with name " + propertyName + " not found in properties");
-	// }
-	// }
 
 	private static JmsMessageRoutingInfo createMessageRoutingInfoFromProperties(
 			Properties properties) {

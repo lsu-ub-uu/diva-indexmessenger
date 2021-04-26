@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Uppsala University Library
+ * Copyright 2019, 2021 Uppsala University Library
  *
  * This file is part of Cora.
  *
@@ -68,7 +68,6 @@ public class DivaIndexMessengerStarterTest {
 
 	@Test
 	public void testMainMethod() {
-		// String args[] = new String[] { "divaIndexer.properties" };
 		DivaIndexMessengerStarter.main(args);
 		assertInfoMessagesForStartup();
 		assertNoFatalErrorMessages();
@@ -91,16 +90,23 @@ public class DivaIndexMessengerStarterTest {
 		assertNotNull(loggerSpy);
 	}
 
-	// @Test
-	// public void testMainMethodWithoutPropertiesFileNameShouldUseDefaultFilename() {
-	// String args[] = new String[] {};
-	// DivaIndexMessengerStarter.main(args);
-	// assertNoFatalErrorMessages();
-	// }
+	@Test
+	public void testMainMethodWithPropertiesFileNameShouldUseDefaultFilename() {
+		String args[] = new String[] {};
+		DivaIndexMessengerStarter.main(args);
+		IndexMessengerListener messageListener = DivaIndexMessengerStarter.indexMessengerListener;
+
+		JmsMessageRoutingInfo messagingRoutingInfo = (JmsMessageRoutingInfo) messageListener
+				.getMessageRoutingInfo();
+		assertEquals(messagingRoutingInfo.hostname, "dev-diva-drafts");
+		assertEquals(messagingRoutingInfo.port, "61617");
+		assertEquals(messagingRoutingInfo.routingKey, "fedora.apim.*");
+		assertEquals(messagingRoutingInfo.username, "admin");
+		assertEquals(messagingRoutingInfo.password, "admin");
+	}
 
 	@Test
 	public void testMainMethodCoraClientFactorySetUpCorrectly() throws Exception {
-		// String args[] = new String[] { "divaIndexer.properties" };
 		DivaIndexMessengerStarter.main(args);
 
 		IndexMessengerListener messageListener = DivaIndexMessengerStarter.indexMessengerListener;
@@ -114,7 +120,6 @@ public class DivaIndexMessengerStarterTest {
 
 	@Test
 	public void testMainMethodMessageParserFactorySetUpCorrectly() throws Exception {
-		// String args[] = new String[] { "divaIndexer.properties" };
 		DivaIndexMessengerStarter.main(args);
 
 		IndexMessengerListener messageListener = DivaIndexMessengerStarter.indexMessengerListener;
@@ -126,7 +131,6 @@ public class DivaIndexMessengerStarterTest {
 			throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException,
 			InvocationTargetException, InstantiationException {
 
-		// String args[] = new String[] { "divaIndexer.properties" };
 		DivaIndexMessengerStarter.main(args);
 
 		IndexMessengerListener messageListener = DivaIndexMessengerStarter.indexMessengerListener;
@@ -147,7 +151,6 @@ public class DivaIndexMessengerStarterTest {
 			throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException,
 			InvocationTargetException, InstantiationException {
 
-		// String args[] = new String[] { "divaIndexer.properties" };
 		DivaIndexMessengerStarter.main(args);
 
 		IndexMessengerListener messageListener = DivaIndexMessengerStarter.indexMessengerListener;
@@ -158,73 +161,79 @@ public class DivaIndexMessengerStarterTest {
 		assertEquals(credentials.appToken, "args-appTokenForCora");
 	}
 
-	// @Test
-	// public void testErrorHandling() throws Exception {
-	// String args[] = new String[] { "notEnoughParameters" };
-	//
-	// DivaIndexMessengerStarter.main(args);
-	//
-	// assertEquals(loggerFactorySpy.getNoOfFatalLogMessagesUsingClassName(testedClassName), 1);
-	// assertEquals(loggerFactorySpy.getFatalLogMessageUsingClassNameAndNo(testedClassName, 0),
-	// "Unable to start DivaIndexMessengerStarter, number of arguments should be 9.");
-	// }
+	@Test
+	public void testErrorHandlingNotEnoughParameters() throws Exception {
+		args = new String[] { "args-dev-diva-drafts", "args-61617", "args-fedora.apim.*",
+				"args-admin", "args-admin", "args-someAppTokenVerifierUrl", "args-someBaseUrl" };
 
-	// @Test
-	// public void testErrorHandlingNoAppTokenVerifierUrl() throws Exception {
-	//
-	// String fileName = "propertiesForTestingMissingParameterApptokenUrl.properties";
-	// String propertyName = "appTokenVerifierUrl";
-	// testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
-	// }
-	//
-	// private void testPropertiesErrorWhenPropertyIsMissing(String fileName, String propertyName) {
-	// String args[] = new String[] { fileName };
-	//
-	// DivaIndexMessengerStarter.main(args);
-	// assertCorrectErrorForMissingProperty(propertyName);
-	// }
-	//
-	// @Test
-	// public void testErrorHandlingNoBaseUrl() throws Exception {
-	// String fileName = "propertiesForTestingMissingParameterBaseUrl.properties";
-	// String propertyName = "baseUrl";
-	// testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
-	// }
-	//
-	// @Test
-	// public void testPropertiesErrorWhenHostnameIsMissing() {
-	// String propertyName = "messaging.hostname";
-	// String fileName = "propertiesForTestingMissingParameterHostname.properties";
-	// testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
-	// }
-	//
-	// @Test
-	// public void testPropertiesErrorWhenPortIsMissing() {
-	// String fileName = "propertiesForTestingMissingParameterPort.properties";
-	// String propertyName = "messaging.port";
-	// testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
-	// }
-	//
-	// @Test
-	// public void testPropertiesErrorWhenRoutingKeyIsMissing() {
-	// String propertyName = "messaging.routingKey";
-	// String fileName = "propertiesForTestingMissingParameterRoutingKey.properties";
-	// testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
-	// }
-	//
-	// @Test
-	// public void testPropertiesErrorWhenVirtualHostIsMissing() {
-	// String propertyName = "messaging.username";
-	// String fileName = "propertiesForTestingMissingParameterUsername.properties";
-	// testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
-	// }
-	//
-	// @Test
-	// public void testPropertiesErrorWhenExchangeIsMissing() {
-	// String propertyName = "messaging.password";
-	// String fileName = "propertiesForTestingMissingParameterPassword.properties";
-	// testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
-	// }
+		DivaIndexMessengerStarter.main(args);
+
+		Exception exception = loggerFactorySpy.getFatalLogErrorUsingClassNameAndNo(testedClassName,
+				0);
+		assertTrue(exception instanceof RuntimeException);
+		assertEquals(exception.getMessage(), "Number of arguments should be 9.");
+
+		assertEquals(loggerFactorySpy.getNoOfFatalLogMessagesUsingClassName(testedClassName), 1);
+		assertEquals(loggerFactorySpy.getFatalLogMessageUsingClassNameAndNo(testedClassName, 0),
+				"Unable to start DivaIndexMessengerStarter ");
+	}
+
+	@Test
+	public void testErrorHandlingNoAppTokenVerifierUrl() throws Exception {
+
+		String fileName = "propertiesForTestingMissingParameterApptokenUrl.properties";
+		String propertyName = "appTokenVerifierUrl";
+		testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
+	}
+
+	private void testPropertiesErrorWhenPropertyIsMissing(String fileName, String propertyName) {
+		String args[] = new String[] { fileName };
+
+		DivaIndexMessengerStarter.main(args);
+		assertCorrectErrorForMissingProperty(propertyName);
+	}
+
+	@Test
+	public void testErrorHandlingNoBaseUrl() throws Exception {
+		String fileName = "propertiesForTestingMissingParameterBaseUrl.properties";
+		String propertyName = "baseUrl";
+		testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
+	}
+
+	@Test
+	public void testPropertiesErrorWhenHostnameIsMissing() {
+		String propertyName = "messaging.hostname";
+		String fileName = "propertiesForTestingMissingParameterHostname.properties";
+		testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
+	}
+
+	@Test
+	public void testPropertiesErrorWhenPortIsMissing() {
+		String fileName = "propertiesForTestingMissingParameterPort.properties";
+		String propertyName = "messaging.port";
+		testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
+	}
+
+	@Test
+	public void testPropertiesErrorWhenRoutingKeyIsMissing() {
+		String propertyName = "messaging.routingKey";
+		String fileName = "propertiesForTestingMissingParameterRoutingKey.properties";
+		testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
+	}
+
+	@Test
+	public void testPropertiesErrorWhenVirtualHostIsMissing() {
+		String propertyName = "messaging.username";
+		String fileName = "propertiesForTestingMissingParameterUsername.properties";
+		testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
+	}
+
+	@Test
+	public void testPropertiesErrorWhenExchangeIsMissing() {
+		String propertyName = "messaging.password";
+		String fileName = "propertiesForTestingMissingParameterPassword.properties";
+		testPropertiesErrorWhenPropertyIsMissing(fileName, propertyName);
+	}
 
 	private void assertCorrectErrorForMissingProperty(String propertyName) {
 		assertEquals(loggerFactorySpy.getNoOfFatalLogMessagesUsingClassName(testedClassName), 1);
@@ -242,20 +251,26 @@ public class DivaIndexMessengerStarterTest {
 			throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException,
 			InvocationTargetException, InstantiationException {
 
-		String args[] = new String[] { "divaIndexer.properties" };
+		String args[] = new String[] { "divaIndexerSentIn.properties" };
 		DivaIndexMessengerStarter.main(args);
 
 		IndexMessengerListener messageListener = DivaIndexMessengerStarter.indexMessengerListener;
 		JmsMessageRoutingInfo messagingRoutingInfo = (JmsMessageRoutingInfo) messageListener
 				.getMessageRoutingInfo();
-		// // assert same as in divaindexer.properties
-		assertNotNull(messagingRoutingInfo);
-		assertEquals(messagingRoutingInfo.hostname, "dev-diva-drafts");
-		assertEquals(messagingRoutingInfo.port, "61617");
-		assertEquals(messagingRoutingInfo.routingKey, "fedora.apim.*");
-		assertEquals(messagingRoutingInfo.username, "admin");
-		assertEquals(messagingRoutingInfo.password, "admin");
+		// // assert same as in divaIndexerSentIn.properties
+		String prefix = "fileSentIn-";
+		assertCorrectMessageRoutingInfo(messagingRoutingInfo, prefix);
 
+	}
+
+	private void assertCorrectMessageRoutingInfo(JmsMessageRoutingInfo messagingRoutingInfo,
+			String prefix) {
+		assertNotNull(messagingRoutingInfo);
+		assertEquals(messagingRoutingInfo.hostname, prefix + "dev-diva-drafts");
+		assertEquals(messagingRoutingInfo.port, prefix + "61617");
+		assertEquals(messagingRoutingInfo.routingKey, prefix + "fedora.apim.*");
+		assertEquals(messagingRoutingInfo.username, prefix + "admin");
+		assertEquals(messagingRoutingInfo.password, prefix + "admin");
 	}
 
 	@Test
@@ -263,15 +278,15 @@ public class DivaIndexMessengerStarterTest {
 			throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException,
 			InvocationTargetException, InstantiationException {
 
-		String args[] = new String[] { "divaIndexer.properties" };
+		String args[] = new String[] { "divaIndexerSentIn.properties" };
 		DivaIndexMessengerStarter.main(args);
 
 		IndexMessengerListener messageListener = DivaIndexMessengerStarter.indexMessengerListener;
 		CoraCredentials credentials = messageListener.getCredentials();
 
-		// assert same as in divaindexer.properties
-		assertEquals(credentials.userId, "userIdForCora");
-		assertEquals(credentials.appToken, "appTokenForCora");
+		// assert same as in divaIndexerSentIn.properties
+		assertEquals(credentials.userId, "fileSentIn-userIdForCora");
+		assertEquals(credentials.appToken, "fileSentIn-appTokenForCora");
 	}
 
 }
