@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Uppsala University Library
+ * Copyright 2019, 2021 Uppsala University Library
  *
  * This file is part of Cora.
  *
@@ -21,6 +21,7 @@ package se.uu.ub.cora.diva.indexmessenger;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.IOException;
@@ -45,7 +46,7 @@ public class DivaMessageParserTest {
 	private MessageParser messageParser;
 	private final static String TEST_RESOURCES_FILE_PATH = "./src/test/resources/";
 	private final static String JMS_MESSAGE_WHICH_DOES_TRIGGER_INDEXING = "JmsMessageWhichDoesTriggerIndexing.xml";
-	private final static String JMS_MESSAGE_WHICH_DOES_NOT_TRIGGER_INDEXING = "JmsMessageWhichDoesNotTriggerIndexing.xml";
+	private final static String JMS_MESSAGE_WHEN_DELETE = "JmsMessageWhenDelete.xml";
 
 	@BeforeMethod
 	public void setUp() throws RuntimeException {
@@ -53,8 +54,8 @@ public class DivaMessageParserTest {
 		LoggerProvider.setLoggerFactory(loggerFactory);
 
 		headers = new HashMap<>();
-		headers.put("methodName", "modifyDatastreamByValue");
-		headers.put("pid", "diva2:666498");
+		headers.put("methodName", "modifyDatastreamByReference");
+		headers.put("pid", "authority-person:666498");
 
 		tryToReadExampleMessageFromDivaClassic();
 
@@ -77,40 +78,77 @@ public class DivaMessageParserTest {
 	}
 
 	@Test
-	public void testMessageParserReturnsCorrectId() throws Exception {
+	public void testNoMethodNameWorkOrderShouldNotBeCreated() throws Exception {
+		headers.remove("methodName");
+
 		messageParser.parseHeadersAndMessage(headers, message);
-		assertEquals(messageParser.getParsedId(), headers.get("pid"));
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testWrongMethodNameWorkOrderShouldNotBeCreated() throws Exception {
+		headers.put("methodName", "NOTmodifyDatastreamByReference");
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMethodNameModifyDatastreamByReferenceWorkOrderShouldBeCreated()
+			throws Exception {
+		headers.put("methodName", "modifyDatastreamByReference");
+
+		messageParser.parseHeadersAndMessage(headers, message);
 		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
-	// TODO: NOT REALLY SURE WHERE TO EXTRACT THE TYPE FROM
-	// @Test
-	// public void testMessageParserReturnsCorrectType() throws Exception {
-	// messageParser.parseHeadersAndMessage(headers, message);
-	// assertEquals(messageParser.getParsedType(), "place");
-	// // assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
-	// }
-
-	// TODO: Related to the TODO above. This test is ONLY intended for Coverage Test. Remove it when
-	// the ODO above has been completed.
 	@Test
-	public void testMessageParserReturnsTypeId() throws Exception {
-		messageParser.parseHeadersAndMessage(headers, message);
-		assertEquals(messageParser.getParsedType(), "currentlyUnknownParent");
+	public void testMethodNameModifyObjectANDDeleteMessageWorkOrderShouldBeCreated()
+			throws Exception {
+		String messageWhenDelete = Files
+				.readString(Path.of(TEST_RESOURCES_FILE_PATH + JMS_MESSAGE_WHEN_DELETE));
+		headers.put("methodName", "modifyObject");
+
+		messageParser.parseHeadersAndMessage(headers, messageWhenDelete);
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
 	@Test
-	public void testMessageParserNotConsolidatedMessageWorkOrderShouldNotBeCreated()
+	public void testMethodNameModifyObjectNOTDeleteMessageWorkOrderShouldNotBeCreated()
 			throws Exception {
-		String messageNotTriggeringIndexing = Files.readString(
-				Path.of(TEST_RESOURCES_FILE_PATH + JMS_MESSAGE_WHICH_DOES_NOT_TRIGGER_INDEXING));
-		messageParser.parseHeadersAndMessage(headers, messageNotTriggeringIndexing);
+		headers.put("methodName", "modifyObject");
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMethodNamePurgeObjectWorkOrderShouldBeCreated() throws Exception {
+		headers.put("methodName", "purgeObject");
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMethodNameAddDatastreamWorkOrderShouldBeCreated() throws Exception {
+		headers.put("methodName", "addDatastream");
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testTypeNotHandledWorkOrderShouldNotBeCreated() throws Exception {
+		headers.put("pid", "diva2:45677");
+
+		messageParser.parseHeadersAndMessage(headers, message);
 		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
 	@Test
 	public void testMessageParserPidNullWorkOrderShouldNotBeCreated() throws Exception {
 		headers.replace("pid", null);
+
 		messageParser.parseHeadersAndMessage(headers, message);
 		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
@@ -118,20 +156,79 @@ public class DivaMessageParserTest {
 	@Test
 	public void testMessageParserNoPidWorkOrderShouldNotBeCreated() throws Exception {
 		headers.remove("pid");
+
 		messageParser.parseHeadersAndMessage(headers, message);
 		assertFalse(messageParser.shouldWorkOrderBeCreatedForMessage());
 	}
 
-	//
 	@Test
 	public void testMessageParserLogsWhenNoPidWorkOrderShouldNotBeCreated() throws Exception {
 		headers.remove("pid");
 
 		assertEquals(loggerFactory.getNoOfErrorLogMessagesUsingClassName(testedClassname), 0);
+
 		messageParser.parseHeadersAndMessage(headers, message);
+
 		assertEquals(loggerFactory.getNoOfErrorLogMessagesUsingClassName(testedClassname), 1);
 		assertEquals(loggerFactory.getErrorLogMessageUsingClassNameAndNo(testedClassname, 0),
 				"No pid found in header");
+	}
+
+	@Test
+	public void testNoMethodNameNoValuesShouldBeSet() throws Exception {
+		headers.remove("methodName");
+
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertNull(messageParser.getRecordId());
+		assertNull(messageParser.getRecordType());
+		assertNull(messageParser.getModificationType());
+	}
+
+	@Test
+	public void testMessageParserReturnsCorrectId() throws Exception {
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertEquals(messageParser.getRecordId(), headers.get("pid"));
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testMessageParserReturnsCorrectType() throws Exception {
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertEquals(messageParser.getRecordType(), "person");
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+	}
+
+	@Test
+	public void testGetModificationTypeWhenUpdate() {
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertEquals(messageParser.getModificationType(), "update");
+	}
+
+	@Test
+	public void testGetModificationTypeWhenCreate() {
+		headers.put("methodName", "addDatastream");
+		messageParser.parseHeadersAndMessage(headers, message);
+		assertEquals(messageParser.getModificationType(), "update");
+	}
+
+	@Test
+	public void testGetModificationTypeWhenDelete() throws IOException {
+		String messageWhenDelete = Files
+				.readString(Path.of(TEST_RESOURCES_FILE_PATH + JMS_MESSAGE_WHEN_DELETE));
+		headers.put("methodName", "modifyObject");
+		messageParser.parseHeadersAndMessage(headers, messageWhenDelete);
+
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+		assertEquals(messageParser.getModificationType(), "delete");
+	}
+
+	@Test
+	public void testGetModificationTypeWhenPurge() throws IOException {
+		headers.put("methodName", "purgeObject");
+		messageParser.parseHeadersAndMessage(headers, message);
+
+		assertTrue(messageParser.shouldWorkOrderBeCreatedForMessage());
+		assertEquals(messageParser.getModificationType(), "delete");
 	}
 
 }

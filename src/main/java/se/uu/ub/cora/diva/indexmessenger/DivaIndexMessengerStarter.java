@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Uppsala University Library
+ * Copyright 2019, 2021 Uppsala University Library
  *
  * This file is part of Cora.
  *
@@ -34,27 +34,57 @@ import se.uu.ub.cora.messaging.JmsMessageRoutingInfo;
 
 public class DivaIndexMessengerStarter {
 
+	protected static IndexMessengerListener indexMessengerListener;
+
 	private static Logger logger = LoggerProvider
 			.getLoggerForClass(DivaIndexMessengerStarter.class);
-
-	protected static IndexMessengerListener indexMessengerListener;
 
 	private DivaIndexMessengerStarter() {
 	}
 
 	public static void main(String[] args) {
-		String propertiesFileName = getFilenameFromArgsOrDefault(args);
 		logger.logInfoUsingMessage("DivaIndexMessengerStarter starting...");
-		//
-		try (InputStream input = DivaIndexMessengerStarter.class.getClassLoader()
-				.getResourceAsStream(propertiesFileName)) {
+		tryToCreateIndexMessengerListener(args);
+	}
 
-			Properties properties = loadProperites(input);
+	private static void tryToCreateIndexMessengerListener(String[] args) {
+		try {
+			Properties properties = loadProperties(args);
 			createIndexMessengerListener(properties);
 			logger.logInfoUsingMessage("DivaIndexMessengerStarter started");
 		} catch (Exception ex) {
 			logger.logFatalUsingMessageAndException("Unable to start DivaIndexMessengerStarter ",
 					ex);
+		}
+	}
+
+	private static Properties loadProperties(String[] args) throws IOException {
+		if (propertiesShouldBeReadFromFile(args)) {
+			String propertiesFileName = getFilenameFromArgsOrDefault(args);
+			return readPropertiesFromFile(propertiesFileName);
+		} else if (propertiesProvidedAsArguments(args)) {
+			return loadProperitesFromArgs(args);
+		}
+		throw new RuntimeException("Number of arguments should be 9.");
+
+	}
+
+	private static boolean propertiesShouldBeReadFromFile(String[] args) {
+		return args.length == 0 || fileNameProvidedAsArgument(args);
+	}
+
+	private static boolean fileNameProvidedAsArgument(String[] args) {
+		return args.length == 1;
+	}
+
+	private static boolean propertiesProvidedAsArguments(String[] args) {
+		return args.length == 9;
+	}
+
+	private static Properties readPropertiesFromFile(String propertiesFileName) throws IOException {
+		try (InputStream input = DivaIndexMessengerStarter.class.getClassLoader()
+				.getResourceAsStream(propertiesFileName)) {
+			return loadProperitesFromFile(input);
 		}
 	}
 
@@ -65,8 +95,24 @@ public class DivaIndexMessengerStarter {
 		return "divaIndexer.properties";
 	}
 
-	private static Properties loadProperites(InputStream input) throws IOException {
+	private static Properties loadProperitesFromArgs(String[] args) throws IOException {
 		Properties properties = new Properties();
+		properties.put("messaging.hostname", args[0]);
+		properties.put("messaging.port", args[1]);
+		properties.put("messaging.routingKey", args[2]);
+		properties.put("messaging.username", args[3]);
+		properties.put("messaging.password", args[4]);
+		properties.put("appTokenVerifierUrl", args[5]);
+		properties.put("baseUrl", args[6]);
+		properties.put("cora.userId", args[7]);
+		properties.put("cora.appToken", args[8]);
+
+		return properties;
+	}
+
+	private static Properties loadProperitesFromFile(InputStream input) throws IOException {
+		Properties properties = new Properties();
+
 		properties.load(input);
 		return properties;
 	}

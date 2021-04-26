@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entry xmlns="http://www.w3.org/2005/Atom" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:fedora-types="http://www.fedora.info/definitions/1/0/types/">
+<id>urn:uuid:a3a24e16-2747-4d78-bf7c-023ee669dfb3</id>
+<updated>2021-04-19T08:52:21.593Z</updated>
+<author>
+<name>fedoraAdmin</name>
+<uri>http://localhost:8088/fedora</uri>
+</author>
+<title type="text">modifyObject</title>
+<category term="authority-person:55" scheme="fedora-types:pid" label="xsd:string"></category>
+<category term="D" scheme="fedora-types:state" label="xsd:string"></category>
+<category term="null" scheme="fedora-types:label" label="xsd:string"></category>
+<category term="Marked as deleted" scheme="fedora-types:logMessage" label="xsd:string"></category>
+<summary type="text">authority-person:55</summary>
+<content type="text">2021-04-19T08:52:21.593Z</content>
+<category term="32.1" scheme="info:fedora/fedora-system:def/view#version"></category>
+<category term="info:fedora/fedora-system:ATOM-APIM-1.0" scheme="http://www.fedora.info/definitions/1/0/types/formatURI"></category>
+</entry>
