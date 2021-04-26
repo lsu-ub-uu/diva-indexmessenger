@@ -25,7 +25,7 @@
 	<properties>
 		<logger.version>2.2.0</logger.version>
 		<coralog4j.version>2.2.0</coralog4j.version>
-		<indexmessenger.version>1.4-SNAPSHOT</indexmessenger.version>
+		<indexmessenger.version>1.4.0</indexmessenger.version>
 		<activemq.version>1.1.0</activemq.version>
 	</properties>
 
