@@ -26,7 +26,7 @@
 		<logger.version>2.5.0</logger.version>
 		<coralog4j.version>2.9.0</coralog4j.version>
 		<indexmessenger.version>1.9.0</indexmessenger.version>
-		<activemq.version>1.6.0</activemq.version>
+		<activemq.version>1.7.0</activemq.version>
 		
 		<mavenshadeplugin.version>3.3.0</mavenshadeplugin.version>		
 	</properties>
