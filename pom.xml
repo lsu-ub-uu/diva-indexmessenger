@@ -27,6 +27,8 @@
 		<coralog4j.version>2.9.0</coralog4j.version>
 		<indexmessenger.version>1.9.0</indexmessenger.version>
 		<activemq.version>1.6.0</activemq.version>
+		
+		<mavenshadeplugin.version>3.3.0</mavenshadeplugin.version>		
 	</properties>
 
 	<scm>
@@ -77,6 +79,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
+				<version>${mavenshadeplugin.version}</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
